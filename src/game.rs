@@ -1,4 +1,5 @@
 use crate::actions::Actions;
+use crate::constants::{WIN_HEIGHT, WIN_WIDTH};
 use crate::GameState;
 
 use bevy::prelude::*;
@@ -37,10 +38,23 @@ fn setup_graphics(mut commands: Commands) {
 }
 
 fn setup_physics(mut commands: Commands) {
+    let plain = shapes::Rectangle {
+        extents: Vec2::new(WIN_WIDTH, 40.),
+        ..default()
+    };
     commands
         .spawn()
-        .insert(Collider::cuboid(500.0, 50.0))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)));
+        .insert_bundle(GeometryBuilder::build_as(
+            &plain,
+            DrawMode::Fill(bevy_prototype_lyon::prelude::FillMode::color(Color::BLACK)),
+            default(),
+        ))
+        .insert(Collider::cuboid(WIN_WIDTH, 20.0))
+        .insert_bundle(TransformBundle::from(Transform::from_xyz(
+            0.0,
+            -WIN_HEIGHT / 2. + 20.,
+            0.0,
+        )));
 
     let shape = shapes::Rectangle {
         extents: Vec2::new(40., 50.),
@@ -59,6 +73,7 @@ fn setup_physics(mut commands: Commands) {
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::default())
         .insert(ExternalImpulse::default())
+        .insert(GravityScale(2.))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, 200.0, 0.0)));
 }
 

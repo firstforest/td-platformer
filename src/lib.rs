@@ -10,6 +10,7 @@ use crate::audio::InternalAudioPlugin;
 use crate::game::MainGamePlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
+pub mod constants;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
