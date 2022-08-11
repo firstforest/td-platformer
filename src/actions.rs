@@ -16,9 +16,16 @@ impl Plugin for ActionsPlugin {
 #[derive(Default)]
 pub struct Actions {
     pub player_movement: Option<Vec2>,
+    pub player_jump: Option<bool>,
 }
 
 fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
+    if GameControl::Up.just_pressed(&keyboard_input) {
+        actions.player_jump = Some(true);
+    } else {
+        actions.player_jump = None;
+    }
+
     if GameControl::Up.just_released(&keyboard_input)
         || GameControl::Up.pressed(&keyboard_input)
         || GameControl::Left.just_released(&keyboard_input)
