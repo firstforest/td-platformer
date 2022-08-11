@@ -1,15 +1,15 @@
 mod actions;
 mod audio;
+mod game;
 mod loading;
 mod menu;
 mod player;
-mod game;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
+use crate::game::MainGamePlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
-use crate::game::MainGamePlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
