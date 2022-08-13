@@ -131,7 +131,9 @@ impl GameControl {
     fn just_pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
         match self {
             GameControl::Up => {
-                keyboard_input.just_pressed(KeyCode::W) || keyboard_input.just_pressed(KeyCode::Up)
+                keyboard_input.just_pressed(KeyCode::W)
+                    || keyboard_input.just_pressed(KeyCode::Up)
+                    || keyboard_input.just_pressed(KeyCode::Space)
             }
             GameControl::Down => {
                 keyboard_input.just_pressed(KeyCode::S)
