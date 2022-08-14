@@ -1,9 +1,11 @@
 use super::enemy::*;
 use super::player::*;
 use crate::constants::{WIN_HEIGHT, WIN_WIDTH};
+use crate::loading::AudioAssets;
 use crate::GameState;
 
 use bevy::prelude::*;
+use bevy_kira_audio::Audio;
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier2d::prelude::*;
 
@@ -98,15 +100,19 @@ fn despawn_enemy(
     mut contact_force_events: EventReader<ContactForceEvent>,
     player: Query<Entity, With<Player>>,
     enemies: Query<Entity, With<Enemy>>,
+    audio_assets: Res<AudioAssets>,
+    audio: Res<Audio>,
 ) {
     for collision_event in collision_events.iter() {
         match collision_event {
             CollisionEvent::Started(a, b, _) => {
                 if player.single() == *a && enemies.contains(*b) {
                     commands.entity(*b).despawn();
+                    audio.play(audio_assets.attack.clone());
                 }
                 if player.single() == *b && enemies.contains(*a) {
                     commands.entity(*a).despawn();
+                    audio.play(audio_assets.attack.clone());
                 }
             }
             _ => {}
