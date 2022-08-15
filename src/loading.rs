@@ -35,6 +35,8 @@ pub struct AudioAssets {
     pub flying: Handle<AudioSource>,
     #[asset(path = "audio/attack.ogg")]
     pub attack: Handle<AudioSource>,
+    #[asset(path = "audio/collect.ogg")]
+    pub collect: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection)]
