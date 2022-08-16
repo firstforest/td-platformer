@@ -11,7 +11,7 @@ pub struct Player {
 
 impl Default for Player {
     fn default() -> Self {
-        Self { jump_power: 50. }
+        Self { jump_power: 100. }
     }
 }
 
@@ -37,7 +37,7 @@ pub fn setup_player(mut commands: Commands) {
             ..default()
         })
         .insert(ExternalImpulse::default())
-        .insert(GravityScale(2.))
+        .insert(GravityScale(10.))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, 200.0, 0.0)));
 }
 

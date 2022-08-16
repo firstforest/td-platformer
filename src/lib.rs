@@ -1,9 +1,9 @@
 mod actions;
 mod audio;
+pub mod constants;
 mod game;
 mod loading;
 mod menu;
-pub mod constants;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
@@ -25,6 +25,7 @@ enum GameState {
     Loading,
     // During this State the actual game logic is executed
     Playing,
+    GameOver,
     // Here the menu is drawn and waiting for player interaction
     Menu,
 }

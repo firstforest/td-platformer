@@ -25,6 +25,7 @@ impl Plugin for MainGamePlugin {
                     .with_system(setup_ground)
                     .with_system(setup_core)
                     .with_system(setup_player)
+                    .with_system(setup_hp)
                     .with_system(setup_score),
             )
             .add_system_set(
@@ -37,7 +38,10 @@ impl Plugin for MainGamePlugin {
                     .with_system(move_energy)
                     .with_system(start_collect)
                     .with_system(collect_energy)
-                    .with_system(update_score),
+                    .with_system(atack_core)
+                    .with_system(update_hp_text)
+                    .with_system(update_score)
+                    .with_system(check_gameover),
             );
 
         #[cfg(debug_assertions)]
@@ -88,7 +92,52 @@ fn update_score(mut query: Query<&mut Text, With<EnergyText>>, score: Res<Energy
 }
 
 #[derive(Component)]
-struct Core;
+struct HpText;
+
+fn setup_hp(mut commands: Commands, font_assets: Res<FontAssets>) {
+    commands
+        .spawn()
+        .insert_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "HP: ",
+                    TextStyle {
+                        font: font_assets.fira_sans.clone(),
+                        font_size: 60.0,
+                        color: Color::WHITE,
+                    },
+                ),
+                TextSection::from_style(TextStyle {
+                    font: font_assets.fira_sans.clone(),
+                    font_size: 60.0,
+                    color: Color::GOLD,
+                }),
+            ])
+            .with_style(Style {
+                align_self: AlignSelf::FlexEnd,
+                ..default()
+            }),
+        )
+        .insert(HpText);
+}
+
+fn update_hp_text(mut query: Query<&mut Text, With<HpText>>, core: Query<&Core>) {
+    let hp = core.single().hp;
+    for mut text in &mut query {
+        text.sections[1].value = format!("{hp:.2}");
+    }
+}
+
+#[derive(Component)]
+struct Core {
+    hp: i32,
+}
+
+impl Default for Core {
+    fn default() -> Self {
+        Self { hp: 100 }
+    }
+}
 #[derive(Component)]
 struct CollectArea {
     radius: f32,
@@ -106,7 +155,7 @@ fn setup_core(mut commands: Commands) {
     };
     commands
         .spawn()
-        .insert(Core)
+        .insert(Core::default())
         .insert(Target)
         .insert_bundle(GeometryBuilder::build_as(
             &shape,
@@ -155,6 +204,35 @@ fn setup_ground(mut commands: Commands) {
             -WIN_HEIGHT / 2. + 20.,
             0.0,
         )));
+}
+
+fn atack_core(
+    mut commands: Commands,
+    mut collision_events: EventReader<CollisionEvent>,
+    mut core: Query<(Entity, &mut Core)>,
+    enemies: Query<(Entity, &Transform), With<Enemy>>,
+    audio_assets: Res<AudioAssets>,
+    audio: Res<Audio>,
+) {
+    for collision_event in collision_events.iter() {
+        match collision_event {
+            CollisionEvent::Started(a, b, _) => {
+                if core.single().0 == *a {
+                    if let Some(enemy) = enemies.iter().find(|x| x.0 == *b) {
+                        commands.entity(enemy.0).despawn();
+                        core.single_mut().1.hp -= 10;
+                    }
+                }
+                if core.single().0 == *b {
+                    if let Some(enemy) = enemies.iter().find(|x| x.0 == *a) {
+                        commands.entity(enemy.0).despawn();
+                        core.single_mut().1.hp -= 10;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 fn despawn_enemies(
@@ -329,5 +407,11 @@ fn start_collect(
             }
             _ => {}
         }
+    }
+}
+
+fn check_gameover(query: Query<&Core>, mut state: ResMut<State<GameState>>) {
+    if query.single().hp <= 0 {
+        state.set(GameState::GameOver).unwrap()
     }
 }
