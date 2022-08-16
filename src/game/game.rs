@@ -2,6 +2,7 @@ use super::enemy::*;
 use super::player::*;
 use crate::constants::{WIN_HEIGHT, WIN_WIDTH};
 use crate::loading::AudioAssets;
+use crate::loading::FontAssets;
 use crate::GameState;
 
 use bevy::prelude::*;
@@ -23,7 +24,8 @@ impl Plugin for MainGamePlugin {
                     .with_system(setup_graphics)
                     .with_system(setup_ground)
                     .with_system(setup_core)
-                    .with_system(setup_player),
+                    .with_system(setup_player)
+                    .with_system(setup_score),
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -34,13 +36,54 @@ impl Plugin for MainGamePlugin {
                     .with_system(despawn_enemies)
                     .with_system(move_energy)
                     .with_system(start_collect)
-                    .with_system(collect_energy),
+                    .with_system(collect_energy)
+                    .with_system(update_score),
             );
 
         #[cfg(debug_assertions)]
         {
             app.add_plugin(RapierDebugRenderPlugin::default());
         }
+    }
+}
+
+#[derive(Component)]
+struct EnergyText;
+
+struct EnergyPoint(i32);
+
+fn setup_score(mut commands: Commands, font_assets: Res<FontAssets>) {
+    commands
+        .spawn()
+        .insert_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "Energy: ",
+                    TextStyle {
+                        font: font_assets.fira_sans.clone(),
+                        font_size: 60.0,
+                        color: Color::WHITE,
+                    },
+                ),
+                TextSection::from_style(TextStyle {
+                    font: font_assets.fira_sans.clone(),
+                    font_size: 60.0,
+                    color: Color::GOLD,
+                }),
+            ])
+            .with_style(Style {
+                align_self: AlignSelf::FlexEnd,
+                ..default()
+            }),
+        )
+        .insert(EnergyText);
+    commands.insert_resource(EnergyPoint(0));
+}
+
+fn update_score(mut query: Query<&mut Text, With<EnergyText>>, score: Res<EnergyPoint>) {
+    let s = score.0;
+    for mut text in &mut query {
+        text.sections[1].value = format!("{s:.2}");
     }
 }
 
@@ -258,10 +301,12 @@ fn collect_energy(
     query: Query<(&Energy, Entity)>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
+    mut score: ResMut<EnergyPoint>,
 ) {
     for (energy, entity) in query.iter().filter(|x| x.0.state == EnergyState::Goal) {
         commands.entity(entity).despawn();
         audio.play(audio_assets.collect.clone());
+        score.0 += energy.energy;
     }
 }
 
